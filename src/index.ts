@@ -5,8 +5,10 @@
  * - @effect/platform-node: Node.js specific implementations
  */
 import {
+	FetchHttpClient,
 	HttpApi,
 	HttpApiBuilder,
+	HttpApiClient,
 	HttpApiEndpoint,
 	HttpApiGroup,
 	HttpApiSwagger
@@ -80,3 +82,22 @@ const ServerLive = HttpApiBuilder.serve().pipe(
  * - Runs the server in the Node.js runtime environment
  */
 Layer.launch(ServerLive).pipe(NodeRuntime.runMain)
+
+
+/* 
+ * Program that derives and uses a client from the API
+ * */
+const program = Effect.gen(function* () {
+	// Derive a client
+	const client = yield* HttpApiClient.make(MyApi, {
+		baseUrl: "http://localhost:3001"
+	})
+
+	/* Call the "hi-mum" endpoint */
+	const hiMum = yield* client.Greetings["hi-mum"]()
+	yield* Effect.log(hiMum)
+})
+
+
+/* Provide a fetch-based HTTP client and run the program */
+Effect.runFork(program.pipe(Effect.provide(FetchHttpClient.layer)))
