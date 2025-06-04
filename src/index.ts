@@ -11,6 +11,7 @@ import {
 	HttpApiClient,
 	HttpApiEndpoint,
 	HttpApiGroup,
+	HttpApiSchema,
 	HttpApiSwagger
 } from '@effect/platform'
 import {
@@ -26,13 +27,61 @@ import { createServer } from 'node:http'
  * 1. "hello-world" - GET / - Returns a string
  * 2. "hi-mum" - GET /hi-mum - Returns a string
  */
-const MyApi = HttpApi.make("MyApi").add(
-	HttpApiGroup.make("Greetings").add(
-		HttpApiEndpoint.get("hello-world", '/').addSuccess(Schema.String)
-	).add(
-		HttpApiEndpoint.get("hi-mum", '/hi-mum').addSuccess(Schema.String)
+const optionTwoParam = HttpApiSchema.param("id", Schema.NumberFromString)
+
+const MyApi = HttpApi.make("MyApi")
+	.add(
+		HttpApiGroup.make("Greetings")
+			/* Get endpoint */
+			.add(
+				HttpApiEndpoint.get("hello-world", '/').addSuccess(Schema.String)
+			)
+			.add(
+				HttpApiEndpoint.get("hi-mum", '/hi-mum').addSuccess(Schema.String)
+			)
+			.add(
+				/* add route params */
+				HttpApiEndpoint.get('pass-param-option-one', '/param/optionOne/:id')
+					/* Define param Schema  */
+					.setPath(Schema.Struct({
+						id: Schema.NumberFromString
+					})).addSuccess(Schema.String)
+
+			)
+			.add(
+				HttpApiEndpoint.get('pass-param-option-two', `/params/optionTwo/${optionTwoParam}`).addSuccess(Schema.String)
+			)
+			/* Define a post endpoint */
+			.add(
+				HttpApiEndpoint.post('post', '/post')
+					/* Define request body schema */
+					.setPayload(
+						Schema.Struct({
+							name: Schema.String
+						})
+					)
+					/* Define response schema */
+					.addSuccess(Schema.String)
+			)
+			/* Delete endpoint */
+			.add(
+				HttpApiEndpoint.del('delete', '/delete/:id')
+					.setPath(Schema.Struct({
+						id: Schema.NumberFromString
+					}))
+					.addSuccess(Schema.String)
+			)
+			/* Patch/Update endpoint */
+			.add(
+				HttpApiEndpoint.patch('patch/update', '/patch/:id')
+					.setPath(Schema.Struct({
+						id: Schema.NumberFromString
+					}))
+			)
+			.add(
+				HttpApiEndpoint.get('catchAll', '/*').addSuccess(Schema.String)
+			)
 	)
-)
 
 
 /**
@@ -53,6 +102,30 @@ const GreetingsLive = HttpApiBuilder
 			.handle(
 				"hi-mum",
 				() => Effect.succeed('Hi mum')
+			)
+			.handle(
+				"pass-param-option-one",
+				() => Effect.succeed('Passing params Option one')
+			)
+			.handle(
+				"pass-param-option-two",
+				() => Effect.succeed('Passing params Option two')
+			)
+			.handle(
+				"post",
+				() => Effect.succeed('Post')
+			)
+			.handle(
+				"delete",
+				() => Effect.succeed('Del')
+			)
+			.handle(
+				"patch/update",
+				() => Effect.succeed('Patch')
+			)
+			.handle(
+				"catchAll",
+				() => Effect.succeed("Catch All")
 			)
 	)
 
