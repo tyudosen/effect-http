@@ -8,7 +8,8 @@ import {
 	HttpApi,
 	HttpApiBuilder,
 	HttpApiEndpoint,
-	HttpApiGroup
+	HttpApiGroup,
+	HttpApiSwagger
 } from '@effect/platform'
 import {
 	Effect,
@@ -66,8 +67,9 @@ const MyApiLive = HttpApiBuilder.api(MyApi).pipe(Layer.provide(GreetingsLive))
  * - Configures Node.js HTTP server to listen on port 3001
  */
 const ServerLive = HttpApiBuilder.serve().pipe(
+	Layer.provide(HttpApiSwagger.layer()), // Provide the Swagger layer so clients can access auto-generated docs
 	Layer.provide(MyApiLive), // Provide the live API implementation
-	Layer.provide(NodeHttpServer.layer(createServer, { 
+	Layer.provide(NodeHttpServer.layer(createServer, {
 		port: 3001
 	}))
 )
