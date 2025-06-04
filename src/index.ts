@@ -1,0 +1,80 @@
+/**
+ * Import required dependencies:
+ * - @effect/platform: Core HTTP API building blocks
+ * - effect: Core Effect types and utilities
+ * - @effect/platform-node: Node.js specific implementations
+ */
+import {
+	HttpApi,
+	HttpApiBuilder,
+	HttpApiEndpoint,
+	HttpApiGroup
+} from '@effect/platform'
+import {
+	Effect,
+	Layer
+} from 'effect'
+import { Schema } from 'effect/index'
+import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
+import { createServer } from 'node:http'
+
+/**
+ * Define the API structure with two endpoints in the "Greetings" group:
+ * 1. "hello-world" - GET / - Returns a string
+ * 2. "hi-mum" - GET /hi-mum - Returns a string
+ */
+const MyApi = HttpApi.make("MyApi").add(
+	HttpApiGroup.make("Greetings").add(
+		HttpApiEndpoint.get("hello-world", '/').addSuccess(Schema.String)
+	).add(
+		HttpApiEndpoint.get("hi-mum", '/hi-mum').addSuccess(Schema.String)
+	)
+)
+
+
+/**
+ * Implement the "Greetings" group endpoints:
+ * - Creates a live implementation of the API group using HttpApiBuilder
+ * - Each endpoint returns a simple string response wrapped in an Effect
+ * - The handler function maps each endpoint to its implementation
+ */
+const GreetingsLive = HttpApiBuilder
+	.group(
+		MyApi,
+		"Greetings",
+		(handler) => handler
+			.handle(
+				"hello-world",
+				() => Effect.succeed('Hello World')
+			)
+			.handle(
+				"hi-mum",
+				() => Effect.succeed('Hi mum')
+			)
+	)
+
+/**
+ * Create a live implementation of the entire API:
+ * - Combines the API definition with its implementation using Layer
+ */
+const MyApiLive = HttpApiBuilder.api(MyApi).pipe(Layer.provide(GreetingsLive))
+
+/**
+ * Set up and configure the HTTP server:
+ * - Creates a server layer using HttpApiBuilder.serve()
+ * - Provides the live API implementation
+ * - Configures Node.js HTTP server to listen on port 3001
+ */
+const ServerLive = HttpApiBuilder.serve().pipe(
+	Layer.provide(MyApiLive), // Provide the live API implementation
+	Layer.provide(NodeHttpServer.layer(createServer, { 
+		port: 3001
+	}))
+)
+
+/**
+ * Launch the server:
+ * - Uses Layer.launch to start the server
+ * - Runs the server in the Node.js runtime environment
+ */
+Layer.launch(ServerLive).pipe(NodeRuntime.runMain)

@@ -1,2 +1,5 @@
 .envrc
 .direnv/
+.bin
+.pnpm
+node_modules/

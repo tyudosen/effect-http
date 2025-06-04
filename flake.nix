@@ -21,6 +21,7 @@
             jq
             nodejs
             postgresql
+            bun
           ];
         };
       });
