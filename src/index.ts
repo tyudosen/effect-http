@@ -150,8 +150,11 @@ class Greetings extends HttpApiGroup.make('Greetings')
 	)
 { }
 
-const MyApi = HttpApi.make("MyApi")
+/* Opaque class for API */
+class MyApi extends HttpApi.make('MyApi')
 	.add(Greetings)
+{ }
+
 
 
 /**
