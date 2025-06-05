@@ -44,6 +44,17 @@ const MyApi = HttpApi.make("MyApi")
 			.add(
 				HttpApiEndpoint
 					.get("hello-world", '/')
+					// Specify the headers schema
+					.setHeaders(
+						Schema.Struct({
+							// Header must be a string
+							"X-API-Key": Schema.String,
+							// Header must be a string with an added description
+							"X-Request-ID": Schema.String.annotations({
+								description: "Unique identifier for the request"
+							})
+						})
+					)
 					.addSuccess(Schema.String)
 			)
 			.add(
