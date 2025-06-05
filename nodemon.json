@@ -1,0 +1,13 @@
+{
+  "exec": "bun src/index.ts",
+  "watch": [
+    "*.ts",
+    "src/**/*.ts"
+  ],
+  "ext": "ts,js,json",
+  "ignore": [
+    "node_modules/**/*",
+    "dist/**/*"
+  ],
+  "delay": "1000"
+}

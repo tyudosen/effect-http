@@ -16,11 +16,18 @@ import {
 } from '@effect/platform'
 import {
 	Effect,
-	Layer
+	Layer,
+	DateTime
 } from 'effect'
 import { Schema } from 'effect/index'
 import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
 import { createServer } from 'node:http'
+
+const User = Schema.Struct({
+	name: Schema.NonEmptyTrimmedString,
+	id: Schema.Number,
+	createdAt: Schema.DateTimeUtc
+})
 
 /**
  * Define the API structure with two endpoints in the "Greetings" group:
@@ -34,10 +41,26 @@ const MyApi = HttpApi.make("MyApi")
 		HttpApiGroup.make("Greetings")
 			/* Get endpoint */
 			.add(
-				HttpApiEndpoint.get("hello-world", '/').addSuccess(Schema.String)
+				HttpApiEndpoint
+					.get("hello-world", '/')
+					.addSuccess(Schema.String)
 			)
 			.add(
-				HttpApiEndpoint.get("hi-mum", '/hi-mum').addSuccess(Schema.String)
+				HttpApiEndpoint.get("users", '/users')
+					/* Specify URL params Schema http://localhost:3001/users?page=1&sort="asc"*/
+					.setUrlParams(
+						Schema.Struct({
+							// param "page" for pagination
+							page: Schema.NumberFromString,
+							// "sort" for sorting options
+							sort: Schema.UndefinedOr(Schema.String.annotations({
+								description: 'Sorting criteria'
+							})),
+							/* a URL parameter that accepts multiple values http://localhost:3000/?friend=tom&friend=jensen*/
+							friend: Schema.UndefinedOr(Schema.Array(Schema.String))
+						})
+					)
+					.addSuccess(Schema.Array(User))
 			)
 			.add(
 				/* add route params */
@@ -90,6 +113,8 @@ const MyApi = HttpApi.make("MyApi")
  * - Each endpoint returns a simple string response wrapped in an Effect
  * - The handler function maps each endpoint to its implementation
  */
+const now = await Effect.runPromise(DateTime.now)
+console.log('now --->', now)
 const GreetingsLive = HttpApiBuilder
 	.group(
 		MyApi,
@@ -100,8 +125,8 @@ const GreetingsLive = HttpApiBuilder
 				() => Effect.succeed('Hello World')
 			)
 			.handle(
-				"hi-mum",
-				() => Effect.succeed('Hi mum')
+				"users",
+				() => Effect.succeed([{ name: 'James', id: 123, createdAt: now }])
 			)
 			.handle(
 				"pass-param-option-one",
@@ -167,7 +192,7 @@ const program = Effect.gen(function* () {
 	})
 
 	/* Call the "hi-mum" endpoint */
-	const hiMum = yield* client.Greetings["hi-mum"]()
+	const hiMum = yield* client.Greetings["hello-world"]()
 	yield* Effect.log(hiMum)
 })
 
