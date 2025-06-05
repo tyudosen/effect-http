@@ -37,119 +37,121 @@ const User = Schema.Struct({
  */
 const optionTwoParam = HttpApiSchema.param("id", Schema.NumberFromString)
 
-const MyApi = HttpApi.make("MyApi")
+
+/* Creating a Group with an Opaque Type */
+class Greetings extends HttpApiGroup.make('Greetings')
 	.add(
-		HttpApiGroup.make("Greetings")
-			/* Get endpoint */
-			.add(
-				HttpApiEndpoint
-					.get("hello-world", '/')
-					// Specify the headers schema
-					.setHeaders(
-						Schema.Struct({
-							// Header must be a string
-							"X-API-Key": Schema.String,
-							// Header must be a string with an added description
-							"X-Request-ID": Schema.String.annotations({
-								description: "Unique identifier for the request"
-							})
-						})
-					)
-					.addSuccess(Schema.String)
+		HttpApiEndpoint
+			.get("hello-world", '/')
+			// Specify the headers schema
+			.setHeaders(
+				Schema.Struct({
+					// Header must be a string
+					"X-API-Key": Schema.String,
+					// Header must be a string with an added description
+					"X-Request-ID": Schema.String.annotations({
+						description: "Unique identifier for the request"
+					})
+				})
 			)
-			.add(
-				HttpApiEndpoint.get("users", '/users')
-					/* Specify URL params Schema http://localhost:3001/users?page=1&sort="asc"*/
-					.setUrlParams(
-						Schema.Struct({
-							// param "page" for pagination
-							page: Schema.NumberFromString,
-							// "sort" for sorting options
-							sort: Schema.UndefinedOr(Schema.String.annotations({
-								description: 'Sorting criteria'
-							})),
-							/* a URL parameter that accepts multiple values http://localhost:3000/?friend=tom&friend=jensen*/
-							friend: Schema.UndefinedOr(Schema.Array(Schema.String))
-						})
-					)
-					.addSuccess(
-						Schema.Array(User),
-						{
-							status: 206 // Add a custom success status
-						}
-					)
+			.addSuccess(Schema.String)
+	)
+	.add(
+		HttpApiEndpoint.get("users", '/users')
+			/* Specify URL params Schema http://localhost:3001/users?page=1&sort="asc"*/
+			.setUrlParams(
+				Schema.Struct({
+					// param "page" for pagination
+					page: Schema.NumberFromString,
+					// "sort" for sorting options
+					sort: Schema.UndefinedOr(Schema.String.annotations({
+						description: 'Sorting criteria'
+					})),
+					/* a URL parameter that accepts multiple values http://localhost:3000/?friend=tom&friend=jensen*/
+					friend: Schema.UndefinedOr(Schema.Array(Schema.String))
+				})
 			)
-			.add(
-				/* add route params */
-				HttpApiEndpoint.get('pass-param-option-one', '/param/optionOne/:id')
-					/* Define param Schema  */
-					.setPath(Schema.Struct({
-						id: Schema.NumberFromString
-					})).addSuccess(Schema.String)
-
-			)
-			.add(
-				HttpApiEndpoint.get('pass-param-option-two', `/params/optionTwo/${optionTwoParam}`).addSuccess(Schema.String)
-			)
-			/* Define a post endpoint */
-			.add(
-				HttpApiEndpoint.post('post', '/post')
-					/* Define request body schema */
-					.setPayload(
-						Schema.Struct({
-							name: Schema.String
-						})
-							/* Changing the Request Encoding */
-							.pipe(HttpApiSchema.withEncoding({ kind: 'UrlParams' }))
-					)
-					/* Define response schema */
-					.addSuccess(Schema.String)
-			)
-			/* Delete endpoint */
-			.add(
-				HttpApiEndpoint.del('delete', '/delete/:id')
-					.setPath(Schema.Struct({
-						id: Schema.NumberFromString
-					}))
-					/* Set the success response as a string with CSV encoding */
-					.addSuccess(Schema.String.pipe(
-						HttpApiSchema.withEncoding({
-							/* Specify the type of the response */
-							kind: 'Text',
-							/* Define the content type as text/csv */
-							contentType: 'text/csv'
-
-						})
-					))
-			)
-			/* Patch/Update endpoint */
-			.add(
-				HttpApiEndpoint.patch('patch/update', '/patch/:id')
-					.setPath(Schema.Struct({
-						id: Schema.NumberFromString
-					}))
-			)
-			.add(
-				HttpApiEndpoint.get('catchAll', '/*').addSuccess(Schema.String)
-			)
-			// file upload. multipart request
-			.add(
-				HttpApiEndpoint.post(
-					"upload",
-					'/upload'
-				)
-					.setPayload(
-						/* Specify that the payload is a multipart request */
-						HttpApiSchema.Multipart(
-							Schema.Struct({
-								/* Define a "files" field to handle file uploads */
-								files: Multipart.FilesSchema
-							})
-						)
-					)
-					.addSuccess(Schema.String)
+			.addSuccess(
+				Schema.Array(User),
+				{
+					status: 206 // Add a custom success status
+				}
 			)
 	)
+	.add(
+		/* add route params */
+		HttpApiEndpoint.get('pass-param-option-one', '/param/optionOne/:id')
+			/* Define param Schema  */
+			.setPath(Schema.Struct({
+				id: Schema.NumberFromString
+			})).addSuccess(Schema.String)
+
+	)
+	.add(
+		HttpApiEndpoint.get('pass-param-option-two', `/params/optionTwo/${optionTwoParam}`).addSuccess(Schema.String)
+	)
+	/* Define a post endpoint */
+	.add(
+		HttpApiEndpoint.post('post', '/post')
+			/* Define request body schema */
+			.setPayload(
+				Schema.Struct({
+					name: Schema.String
+				})
+					/* Changing the Request Encoding */
+					.pipe(HttpApiSchema.withEncoding({ kind: 'UrlParams' }))
+			)
+			/* Define response schema */
+			.addSuccess(Schema.String)
+	)
+	/* Delete endpoint */
+	.add(
+		HttpApiEndpoint.del('delete', '/delete/:id')
+			.setPath(Schema.Struct({
+				id: Schema.NumberFromString
+			}))
+			/* Set the success response as a string with CSV encoding */
+			.addSuccess(Schema.String.pipe(
+				HttpApiSchema.withEncoding({
+					/* Specify the type of the response */
+					kind: 'Text',
+					/* Define the content type as text/csv */
+					contentType: 'text/csv'
+
+				})
+			))
+	)
+	/* Patch/Update endpoint */
+	.add(
+		HttpApiEndpoint.patch('patch/update', '/patch/:id')
+			.setPath(Schema.Struct({
+				id: Schema.NumberFromString
+			}))
+	)
+	.add(
+		HttpApiEndpoint.get('catchAll', '/*').addSuccess(Schema.String)
+	)
+	// file upload. multipart request
+	.add(
+		HttpApiEndpoint.post(
+			"upload",
+			'/upload'
+		)
+			.setPayload(
+				/* Specify that the payload is a multipart request */
+				HttpApiSchema.Multipart(
+					Schema.Struct({
+						/* Define a "files" field to handle file uploads */
+						files: Multipart.FilesSchema
+					})
+				)
+			)
+			.addSuccess(Schema.String)
+	)
+{ }
+
+const MyApi = HttpApi.make("MyApi")
+	.add(Greetings)
 
 
 /**
