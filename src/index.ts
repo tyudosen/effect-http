@@ -12,7 +12,8 @@ import {
 	HttpApiEndpoint,
 	HttpApiGroup,
 	HttpApiSchema,
-	HttpApiSwagger
+	HttpApiSwagger,
+	Multipart
 } from '@effect/platform'
 import {
 	Effect,
@@ -109,6 +110,23 @@ const MyApi = HttpApi.make("MyApi")
 			.add(
 				HttpApiEndpoint.get('catchAll', '/*').addSuccess(Schema.String)
 			)
+			// file upload. multipart request
+			.add(
+				HttpApiEndpoint.post(
+					"upload",
+					'/upload'
+				)
+					.setPayload(
+						/* Specify that the payload is a multipart request */
+						HttpApiSchema.Multipart(
+							Schema.Struct({
+								/* Define a "files" field to handle file uploads */
+								files: Multipart.FilesSchema
+							})
+						)
+					)
+					.addSuccess(Schema.String)
+			)
 	)
 
 
@@ -156,6 +174,10 @@ const GreetingsLive = HttpApiBuilder
 			.handle(
 				"catchAll",
 				() => Effect.succeed("Catch All")
+			)
+			.handle(
+				"upload",
+				() => Effect.succeed('Uploaded')
 			)
 	)
 
