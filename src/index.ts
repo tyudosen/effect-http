@@ -88,6 +88,8 @@ const MyApi = HttpApi.make("MyApi")
 						Schema.Struct({
 							name: Schema.String
 						})
+							/* Changing the Request Encoding */
+							.pipe(HttpApiSchema.withEncoding({ kind: 'UrlParams' }))
 					)
 					/* Define response schema */
 					.addSuccess(Schema.String)
@@ -98,7 +100,16 @@ const MyApi = HttpApi.make("MyApi")
 					.setPath(Schema.Struct({
 						id: Schema.NumberFromString
 					}))
-					.addSuccess(Schema.String)
+					/* Set the success response as a string with CSV encoding */
+					.addSuccess(Schema.String.pipe(
+						HttpApiSchema.withEncoding({
+							/* Specify the type of the response */
+							kind: 'Text',
+							/* Define the content type as text/csv */
+							contentType: 'text/csv'
+
+						})
+					))
 			)
 			/* Patch/Update endpoint */
 			.add(
