@@ -60,7 +60,12 @@ const MyApi = HttpApi.make("MyApi")
 							friend: Schema.UndefinedOr(Schema.Array(Schema.String))
 						})
 					)
-					.addSuccess(Schema.Array(User))
+					.addSuccess(
+						Schema.Array(User),
+						{
+							status: 206 // Add a custom success status
+						}
+					)
 			)
 			.add(
 				/* add route params */
